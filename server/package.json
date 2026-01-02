@@ -12,6 +12,7 @@
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
+    "mongoose": "^8.0.3",
     "puppeteer": "^21.6.1",
     "cheerio": "^1.0.0-rc.12",
     "axios": "^1.6.2",
@@ -20,7 +21,11 @@
     "openai": "^4.24.1",
     "natural": "^6.10.4",
     "sentiment": "^5.0.2",
+    "wappalyzer-core": "^6.10.66",
+    "lighthouse": "^11.4.0",
     "robots-parser": "^3.0.1",
-    "xml2js": "^0.6.2"
+    "xml2js": "^0.6.2",
+    "whois-json": "^2.0.4",
+    "dns-lookup-promise": "^1.0.4"
   }
 }
