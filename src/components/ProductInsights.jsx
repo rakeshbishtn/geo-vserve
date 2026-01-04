@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -138,6 +138,8 @@ const ProductInsights = ({ onBack }) => {
   const [formError, setFormError] = useState('');
   const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const reportRef = useRef(null);
 
   const strengthIconPool = useMemo(() => [Sparkles, Layers, Palette], []);
 
@@ -212,9 +214,94 @@ const ProductInsights = ({ onBack }) => {
   const totalScore = hasInsights && typeof insights.totalScore === 'number' ? insights.totalScore : 78;
   const metadata = hasInsights ? insights.metadata || {} : {};
 
+  const handleDownloadPDF = () => {
+    if (!reportRef.current || isDownloading) return;
+
+    const printableNode = reportRef.current;
+    const clonedNode = printableNode.cloneNode(true);
+    const printWindow = window.open('', '_blank', 'width=900,height=1200');
+
+    if (!printWindow) {
+      console.error('Popup blocked. Please allow popups for PDF export.');
+      return;
+    }
+
+    setIsDownloading(true);
+    const headContent = document.head.innerHTML;
+    const printStyles = `
+      <style>
+        * {
+          box-sizing: border-box;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        body {
+          margin: 0;
+          background: #0a1628;
+          font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          padding: 32px;
+        }
+        .report-wrapper {
+          max-width: 1100px;
+          margin: 0 auto;
+        }
+        @page {
+          margin: 12mm;
+        }
+      </style>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(`
+      <html>
+        <head>
+          ${headContent}
+          ${printStyles}
+        </head>
+        <body>
+          <div class="report-wrapper">${clonedNode.outerHTML}</div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+
+    printWindow.onload = () => {
+      printWindow.focus();
+      printWindow.print();
+      setTimeout(() => {
+        printWindow.close();
+        setIsDownloading(false);
+      }, 300);
+    };
+  };
+
   return (
     <section style={{ maxWidth: '1100px', margin: '0 auto' }}>
+      {hasInsights && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
+          <button
+            onClick={handleDownloadPDF}
+            disabled={isDownloading}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 18px',
+              borderRadius: '10px',
+              border: '1px solid rgba(255,255,255,0.2)',
+              backgroundColor: isDownloading ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.08)',
+              color: 'white',
+              cursor: isDownloading ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              fontWeight: 600
+            }}
+          >
+            {isDownloading ? 'Preparing PDF…' : 'Download PDF'}
+          </button>
+        </div>
+      )}
       <motion.div
+        ref={reportRef}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         style={{
